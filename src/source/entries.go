@@ -3,6 +3,7 @@ package source
 import (
 	"common"
 	"encoding/json"
+	"io/ioutil"
 	"log"
 	"math/rand"
 	"net/http"
@@ -48,73 +49,84 @@ func QuizEntries(w http.ResponseWriter, req *http.Request){
 	var answerOptions []string
 	
 
-	if(inputJSON.SessionKey == ""){
-		status = common.Status{
-			Code:    403,
-			Message: common.InvalidInput,
-		}
+	readData, errRead := ioutil.ReadAll(req.Body)
+	if errRead != nil {
+		log.Println(errRead)
+	}
+
+	errParse := json.Unmarshal(readData, &inputJSON)
+	if errParse != nil {
+		log.Println(errParse)
+
 	} else {
-		selEntries, errSel := mydb.Query("SELECT entry, image_link FROM entries WHERE quiz_id = ? AND quizsubcategory_id = ?", inputJSON.CategoryID, inputJSON.SubCategoryID)
-
-		if(errSel != nil){
-
+		if(inputJSON.SessionKey == ""){
 			status = common.Status{
 				Code:    403,
-				Message: errSel.Error(),
+				Message: common.InvalidInput,
 			}
+		} else {
+			selEntries, errSel := mydb.Query("SELECT entry, image_link FROM entries WHERE quiz_id = ? AND quizsubcategory_id = ?", inputJSON.CategoryID, inputJSON.SubCategoryID)
 
-		} else{
-			for selEntries.Next(){
-				errSelScan := selEntries.Scan(&Entry, &ImageLink)
+			if(errSel != nil){
 
-				if errSelScan != nil {
-					log.Println(errSelScan)
-				} else {
-
-					answers = append(answers, Entry)
-					answersMap[Entry] = ImageLink
+				status = common.Status{
+					Code:    403,
+					Message: errSel.Error(),
 				}
-			}
 
-			answersLength := len(answers)
-			for ans, image := range answersMap {
+			} else{
+				for selEntries.Next(){
+					errSelScan := selEntries.Scan(&Entry, &ImageLink)
 
-				answerOptions = nil
+					if errSelScan != nil {
+						log.Println(errSelScan)
+					} else {
 
-				if(answersLength >= 4){
-					for len(answerOptions) <= 4 {
-						CreateAnswerOptions(answers, &answerOptions)
-					}
-				} else if (answersLength >= 3) {
-
-					for len(answerOptions) <= 3 {
-						CreateAnswerOptions(answers, &answerOptions)
-					}
-				} else {
-
-					for len(answerOptions) <= 2 {
-						CreateAnswerOptions(answers, &answerOptions)
+						answers = append(answers, Entry)
+						answersMap[Entry] = ImageLink
 					}
 				}
 
-				elem := EntriesOutputData{
-					RightOption : ans,
-					Options : answerOptions,
-					ImageLink : image,
+				answersLength := len(answers)
+				for ans, image := range answersMap {
+
+					answerOptions = nil
+
+					if(answersLength >= 4){
+						for len(answerOptions) <= 4 {
+							CreateAnswerOptions(answers, &answerOptions)
+						}
+					} else if (answersLength >= 3) {
+
+						for len(answerOptions) <= 3 {
+							CreateAnswerOptions(answers, &answerOptions)
+						}
+					} else {
+
+						for len(answerOptions) <= 2 {
+							CreateAnswerOptions(answers, &answerOptions)
+						}
+					}
+
+					elem := EntriesOutputData{
+						RightOption : ans,
+						Options : answerOptions,
+						ImageLink : image,
+					}
+
+					result = append(result, &elem)
 				}
 
-				result = append(result, &elem)
-			}
+				errSelQuiz := mydb.QueryRow("SELECT quizsubcategories.subcategory_name, quizes.quiz_name FROM quizsubcategories LEFT JOIN quizes ON quizes.id = quizsubcategories.quiz_id WHERE quizsubcategories.id = ?", inputJSON.SubCategoryID).Scan(&SubCategory, &Category)
 
-			errSelQuiz := mydb.QueryRow("SELECT quizsubcategories.subcategory_name, quizes.quiz_name FROM quizsubcategories LEFT JOIN quizes ON quizes.id = quizsubcategories.quiz_id WHERE quizsubcategories.id = ?", inputJSON.SubCategoryID).Scan(&SubCategory, &Category)
+				if errSelQuiz != nil{
+					log.Println(errSelQuiz)
+				}
 
-			if errSelQuiz != nil{
-				log.Println(errSelQuiz)
-			}
-
-			status = common.Status{
-				Code:    200,
-				Message: common.SuccessMsg,
+				status = common.Status{
+					Code:    200,
+					Message: common.SuccessMsg,
+				}
 			}
 		}
 	}

@@ -3,6 +3,7 @@ package source
 import (
 	"common"
 	"encoding/json"
+	"io/ioutil"
 	"log"
 	"net/http"
 )
@@ -39,41 +40,53 @@ func QuizCategories(w http.ResponseWriter, req *http.Request){
 	var outputStruct CategoriesOutputStruct
 	var result []*CategoriesOutputData
 
-	if(inputJSON.SessionKey == ""){
-		status = common.Status{
-			Code:    403,
-			Message: common.InvalidInput,
-		}
+	readData, errRead := ioutil.ReadAll(req.Body)
+	if errRead != nil {
+		log.Println(errRead)
+	}
+
+	errParse := json.Unmarshal(readData, &inputJSON)
+	if errParse != nil {
+		log.Println(errParse)
+
 	} else {
-		selCategories, errSel := mydb.Query("SELECT * FROM categories")
 
-		if(errSel != nil){
-
+		if(inputJSON.SessionKey == ""){
 			status = common.Status{
 				Code:    403,
-				Message: errSel.Error(),
+				Message: common.InvalidInput,
 			}
+		} else {
+			selCategories, errSel := mydb.Query("SELECT * FROM categories")
 
-		} else{
-			for selCategories.Next(){
-				errSelScan := selCategories.Scan(&CategoryID, &CategoryName)
+			if(errSel != nil){
 
-				if errSelScan != nil {
-					log.Println(errSelScan)
-				} else {
-
-					elem := CategoriesOutputData{
-						CategoryID: CategoryID,
-						CategoryName: CategoryName,
-					}
-
-					result = append(result, &elem)
+				status = common.Status{
+					Code:    403,
+					Message: errSel.Error(),
 				}
-			}
 
-			status = common.Status{
-				Code:    200,
-				Message: common.SuccessMsg,
+			} else{
+				for selCategories.Next(){
+					errSelScan := selCategories.Scan(&CategoryID, &CategoryName)
+
+					if errSelScan != nil {
+						log.Println(errSelScan)
+					} else {
+
+						elem := CategoriesOutputData{
+							CategoryID: CategoryID,
+							CategoryName: CategoryName,
+						}
+
+						result = append(result, &elem)
+					}
+				}
+
+				status = common.Status{
+					Code:    200,
+					Message: common.SuccessMsg,
+				}
 			}
 		}
 	}

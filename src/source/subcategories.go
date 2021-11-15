@@ -3,6 +3,7 @@ package source
 import (
 	"common"
 	"encoding/json"
+	"io/ioutil"
 	"log"
 	"net/http"
 )
@@ -40,41 +41,53 @@ func QuizSubCategories(w http.ResponseWriter, req *http.Request){
 	var outputStruct SubCategoriesOutputStruct
 	var result []*SubCategoriesOutputData
 
-	if(inputJSON.SessionKey == "" || inputJSON.CategoryID == 0){
-		status = common.Status{
-			Code:    403,
-			Message: common.InvalidInput,
-		}
+	readData, errRead := ioutil.ReadAll(req.Body)
+	if errRead != nil {
+		log.Println(errRead)
+	}
+
+	errParse := json.Unmarshal(readData, &inputJSON)
+	if errParse != nil {
+		log.Println(errParse)
+
 	} else {
-		selSubCategories, errSel := mydb.Query("SELECT * FROM quizsubcategories WHERE quiz_id = ?", inputJSON.CategoryID)
 
-		if(errSel != nil){
-
+		if(inputJSON.SessionKey == "" || inputJSON.CategoryID == 0){
 			status = common.Status{
 				Code:    403,
-				Message: errSel.Error(),
+				Message: common.InvalidInput,
 			}
+		} else {
+			selSubCategories, errSel := mydb.Query("SELECT * FROM quizsubcategories WHERE quiz_id = ?", inputJSON.CategoryID)
 
-		} else{
-			for selSubCategories.Next(){
-				errSelScan := selSubCategories.Scan(&SubCategoryID, &SubCategoryName)
+			if(errSel != nil){
 
-				if errSelScan != nil {
-					log.Println(errSelScan)
-				} else {
-
-					elem := SubCategoriesOutputData{
-						SubCategoryID: SubCategoryID,
-						SubCategoryName: SubCategoryName,
-					}
-
-					result = append(result, &elem)
+				status = common.Status{
+					Code:    403,
+					Message: errSel.Error(),
 				}
-			}
 
-			status = common.Status{
-				Code:    200,
-				Message: common.SuccessMsg,
+			} else{
+				for selSubCategories.Next(){
+					errSelScan := selSubCategories.Scan(&SubCategoryID, &SubCategoryName)
+
+					if errSelScan != nil {
+						log.Println(errSelScan)
+					} else {
+
+						elem := SubCategoriesOutputData{
+							SubCategoryID: SubCategoryID,
+							SubCategoryName: SubCategoryName,
+						}
+
+						result = append(result, &elem)
+					}
+				}
+
+				status = common.Status{
+					Code:    200,
+					Message: common.SuccessMsg,
+				}
 			}
 		}
 	}

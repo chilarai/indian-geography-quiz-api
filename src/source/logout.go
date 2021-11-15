@@ -3,6 +3,8 @@ package source
 import (
 	"common"
 	"encoding/json"
+	"io/ioutil"
+	"log"
 	"net/http"
 )
 
@@ -29,40 +31,51 @@ func Logout(w http.ResponseWriter, req *http.Request){
 	var outputStruct LogoutOutputStruct
 	var id int = 0
 
-	if(inputJSON.Email == "" || inputJSON.SessionKey == ""){
+	readData, errRead := ioutil.ReadAll(req.Body)
+	if errRead != nil {
+		log.Println(errRead)
+	}
 
-		status = common.Status{
-			Code:    403,
-			Message: common.InvalidInput,
-		}
+	errParse := json.Unmarshal(readData, &inputJSON)
+	if errParse != nil {
+		log.Println(errParse)
+
 	} else {
-		errUser := mydb.QueryRow("SELECT * FROM users WHERE email = ? AND session_key = ?", inputJSON.Email, inputJSON.SessionKey).Scan(&id)
+		if(inputJSON.Email == "" || inputJSON.SessionKey == ""){
 
-		if(errUser != nil){
 			status = common.Status{
 				Code:    403,
-				Message: errUser.Error(),
+				Message: common.InvalidInput,
 			}
 		} else {
+			errUser := mydb.QueryRow("SELECT * FROM users WHERE email = ? AND session_key = ?", inputJSON.Email, inputJSON.SessionKey).Scan(&id)
 
-			if(id != 0){
-
-				_, errUpd := mydb.Exec("UPDATE users SET session_key = ? WHERE email = ?", "", inputJSON.Email)
-
-				if(errUpd != nil ){
-
-					status = common.Status{
-						Code:    403,
-						Message: errUpd.Error(),
-					}
-				} else {
-					status = common.Status{
-						Code:    200,
-						Message: common.SuccessMsg,
-					}
+			if(errUser != nil){
+				status = common.Status{
+					Code:    403,
+					Message: errUser.Error(),
 				}
-				
+			} else {
 
+				if(id != 0){
+
+					_, errUpd := mydb.Exec("UPDATE users SET session_key = ? WHERE email = ?", "", inputJSON.Email)
+
+					if(errUpd != nil ){
+
+						status = common.Status{
+							Code:    403,
+							Message: errUpd.Error(),
+						}
+					} else {
+						status = common.Status{
+							Code:    200,
+							Message: common.SuccessMsg,
+						}
+					}
+					
+
+				}
 			}
 		}
 	}
