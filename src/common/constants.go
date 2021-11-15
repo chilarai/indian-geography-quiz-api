@@ -1,7 +1,7 @@
 package common
 
 const (
-	Appport string = ":80"
+	Appport string = ":8080"
 
 	FailedMsg string = "Error"
 	SuccessMsg string =" Success"
@@ -10,8 +10,7 @@ const (
 
 	Mydriver string = "mysql"
 	Myport string = "3306"
-	Mydb string = "grafieks_my"
+	Mydb string = "indian_geography_quiz"
 	Myuser string = "root"
-	// Mypass string = "123@312QQl"
-	Mypass string = ""
+	Mypass string = "123@312QQl"
 )

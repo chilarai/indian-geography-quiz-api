@@ -19,7 +19,6 @@ type LeaderboardsOutputData struct {
 	UserID			int
 	Score 			int
 	CategoryID 		int
-	SubCategoryID 	int
 	Name            string
 	PhotoLink       string
 }
@@ -28,7 +27,6 @@ type LeaderboardsOutputData struct {
 type CurrentUserOutputData struct {
 	Score 			int
 	CategoryID 		int
-	SubCategoryID 	int
 }
 
 func Leaderboard(w http.ResponseWriter, req *http.Request){
@@ -42,14 +40,13 @@ func Leaderboard(w http.ResponseWriter, req *http.Request){
 	type input struct {
 		UserID 			int
 		CategoryID 		int
-		SubCategoryID 	int
 		SessionKey 		string
 		QuizDate 		string
 	}
 
 	var inputJSON input
 	var Name, PhotoLink string
-	var UserID, Score, CategoryID, SubCategoryID, CurrentUserScore, CurrentUserCategoryID, CurrentUserSubCategoryID int
+	var UserID, Score, CategoryID, CurrentUserScore, CurrentUserCategoryID int
 
 	var status common.Status
 	var outputStruct LeaderboardsOutputStruct
@@ -62,7 +59,7 @@ func Leaderboard(w http.ResponseWriter, req *http.Request){
 			Message: common.InvalidInput,
 		}
 	} else {
-		selLeaderboards, errSel := mydb.Query("SELECT users.id, users.name, users.photo_link, leaderboards.score, leaderboards.quiz_id, leaderboards.quizsubcategory_id FROM leaderboards LEFT JOIN users ON users.id = leaderboards.user_id WHERE leaderboards.score_date = ? ORDER BY leaderboards.score DESC LIMIT 0, 20", inputJSON.QuizDate)
+		selLeaderboards, errSel := mydb.Query("SELECT users.id, users.name, users.photo_link, leaderboards.score, leaderboards.quiz_id FROM leaderboards LEFT JOIN users ON users.id = leaderboards.user_id WHERE leaderboards.score_date = ? ORDER BY leaderboards.score DESC LIMIT 0, 20", inputJSON.QuizDate)
 
 		if(errSel != nil){
 
@@ -73,7 +70,7 @@ func Leaderboard(w http.ResponseWriter, req *http.Request){
 
 		} else{
 			for selLeaderboards.Next(){
-				errSelScan := selLeaderboards.Scan(&UserID, &Name, &PhotoLink, &Score, &CategoryID, &SubCategoryID)
+				errSelScan := selLeaderboards.Scan(&UserID, &Name, &PhotoLink, &Score, &CategoryID)
 
 				if errSelScan != nil {
 					log.Println(errSelScan)
@@ -83,7 +80,6 @@ func Leaderboard(w http.ResponseWriter, req *http.Request){
 						UserID			:UserID,
 						Score 			:Score,
 						CategoryID 		:CategoryID,
-						SubCategoryID 	:SubCategoryID,
 						Name            :Name,
 						PhotoLink       :PhotoLink,
 					}
@@ -92,7 +88,7 @@ func Leaderboard(w http.ResponseWriter, req *http.Request){
 				}
 			}
 
-			errSelCurrUser := mydb.QueryRow("SELECT leaderboards.score, leaderboards.quiz_id, leaderboards.quizsubcategory_id FROM leaderboards WHERE leaderboards.score_date = ? AND leaderboards.user_id =? ", inputJSON.QuizDate, inputJSON.UserID).Scan(&CurrentUserScore, &CurrentUserCategoryID, &CurrentUserSubCategoryID)
+			errSelCurrUser := mydb.QueryRow("SELECT leaderboards.score, leaderboards.quiz_id, leaderboards.quizsubcategory_id FROM leaderboards WHERE leaderboards.score_date = ? AND leaderboards.user_id =? ", inputJSON.QuizDate, inputJSON.UserID).Scan(&CurrentUserScore, &CurrentUserCategoryID)
 
 			if(errSelCurrUser != nil){
 				log.Println(errSelCurrUser)
@@ -100,7 +96,6 @@ func Leaderboard(w http.ResponseWriter, req *http.Request){
 				currentUserResult = CurrentUserOutputData{
 					Score 			:CurrentUserScore,
 					CategoryID 		:CurrentUserCategoryID,
-					SubCategoryID 	:CurrentUserSubCategoryID,
 				}
 			}
 
@@ -109,8 +104,6 @@ func Leaderboard(w http.ResponseWriter, req *http.Request){
 				Message: common.SuccessMsg,
 			}
 		}
-
-		
 	}
 
 	outputStruct = LeaderboardsOutputStruct{
