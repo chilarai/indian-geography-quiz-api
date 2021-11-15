@@ -1,6 +1,7 @@
 package main
 
 import (
+	"common"
 	"fmt"
 	"log"
 	"net/http"
@@ -18,8 +19,9 @@ func main(){
 	http.HandleFunc("/categories", source.QuizCategories)
 	http.HandleFunc("/subcategories", source.QuizSubCategories)
 	http.HandleFunc("/entries", source.QuizEntries)
+	http.HandleFunc("/updatescore", source.UpdateScore)
 
-	err := http.ListenAndServe(":8080", nil)
+	err := http.ListenAndServe(common.Appport, nil)
 	if(err != nil){
 		log.Println(err.Error())
 	}
