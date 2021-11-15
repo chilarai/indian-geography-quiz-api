@@ -1,4 +1,4 @@
-package config
+package common
 
 const (
 	Appport string = ":80"

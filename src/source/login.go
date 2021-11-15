@@ -1,7 +1,7 @@
 package source
 
 import (
-	"config"
+	"common"
 	"encoding/json"
 	"net/http"
 )
@@ -16,16 +16,16 @@ type LoginOutputData struct {
 
 // LoginOutputStruct return
 type LoginOutputStruct struct {
-	StatusOut           config.Status  `json:"status"`
+	StatusOut           common.Status  `json:"status"`
 	LoginDataOut LoginOutputData `json:"data"`
 }
 
 
 func Login(w http.ResponseWriter, req *http.Request){
-	config.Cors(&w)
+	common.Cors(&w)
 	w.Header().Set("Content-Type", "application/json")
 
-	mydb := config.Mysqlconnect()
+	mydb := common.Mysqlconnect()
 	defer mydb.Close()
 
 	type input struct {
@@ -36,22 +36,22 @@ func Login(w http.ResponseWriter, req *http.Request){
 	}
 
 	var inputJSON input
-	var status config.Status
+	var status common.Status
 	var outputStatus LoginOutputData
 	var outputStruct LoginOutputStruct
 	var id int = 0
 
 	if(inputJSON.Email == "" || inputJSON.SessionKey == "" || inputJSON.Name == ""){
 
-		status = config.Status{
+		status = common.Status{
 			Code:    403,
-			Message: config.InvalidInput,
+			Message: common.InvalidInput,
 		}
 	} else {
 		errUser := mydb.QueryRow("SELECT * FROM users WHERE email = ?", inputJSON.Email).Scan(&id)
 
 		if(errUser != nil){
-			status = config.Status{
+			status = common.Status{
 				Code:    403,
 				Message: errUser.Error(),
 			}
@@ -62,7 +62,7 @@ func Login(w http.ResponseWriter, req *http.Request){
 				insUser, errIns := mydb.Exec("INSERT INTO users (email, session_key, name, photo_link) VALUES (?,?,?,?)", inputJSON.Email, inputJSON.SessionKey, inputJSON.Name, inputJSON.PhotoLink)
 
 				if(errIns != nil){
-					status = config.Status{
+					status = common.Status{
 						Code:    403,
 						Message: errIns.Error(),
 					}
@@ -76,9 +76,9 @@ func Login(w http.ResponseWriter, req *http.Request){
 						SessionToken: inputJSON.SessionKey,
 					}
 
-					status = config.Status{
+					status = common.Status{
 						Code:    200,
-						Message: config.SuccessMsg,
+						Message: common.SuccessMsg,
 					}
 				}
 				
@@ -89,14 +89,14 @@ func Login(w http.ResponseWriter, req *http.Request){
 
 				if(errUpd != nil ){
 
-					status = config.Status{
+					status = common.Status{
 						Code:    403,
 						Message: errUpd.Error(),
 					}
 				} else {
-					status = config.Status{
+					status = common.Status{
 						Code:    200,
-						Message: config.SuccessMsg,
+						Message: common.SuccessMsg,
 					}
 				}
 				

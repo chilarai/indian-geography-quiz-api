@@ -1,7 +1,7 @@
 package source
 
 import (
-	"config"
+	"common"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -9,7 +9,7 @@ import (
 
 // SubCategoriesOutputStruct return
 type SubCategoriesOutputStruct struct {
-	StatusOut   config.Status     `json:"status"`
+	StatusOut   common.Status     `json:"status"`
 	ListDataOut []*SubCategoriesOutputData `json:"data"`
 }
 
@@ -21,10 +21,10 @@ type SubCategoriesOutputData struct {
 
 func QuizSubCategories(w http.ResponseWriter, req *http.Request){
 	
-	config.Cors(&w)
+	common.Cors(&w)
 	w.Header().Set("Content-Type", "application/json")
 
-	mydb := config.Mysqlconnect()
+	mydb := common.Mysqlconnect()
 	defer mydb.Close()
 
 	type input struct {
@@ -36,21 +36,21 @@ func QuizSubCategories(w http.ResponseWriter, req *http.Request){
 	var SubCategoryName string
 	var SubCategoryID int
 
-	var status config.Status
+	var status common.Status
 	var outputStruct SubCategoriesOutputStruct
 	var result []*SubCategoriesOutputData
 
 	if(inputJSON.SessionKey == "" || inputJSON.CategoryID == 0){
-		status = config.Status{
+		status = common.Status{
 			Code:    403,
-			Message: config.InvalidInput,
+			Message: common.InvalidInput,
 		}
 	} else {
 		selSubCategories, errSel := mydb.Query("SELECT * FROM quizsubcategories WHERE quiz_id = ?", inputJSON.CategoryID)
 
 		if(errSel != nil){
 
-			status = config.Status{
+			status = common.Status{
 				Code:    403,
 				Message: errSel.Error(),
 			}
@@ -72,9 +72,9 @@ func QuizSubCategories(w http.ResponseWriter, req *http.Request){
 				}
 			}
 
-			status = config.Status{
+			status = common.Status{
 				Code:    200,
-				Message: config.SuccessMsg,
+				Message: common.SuccessMsg,
 			}
 		}
 	}

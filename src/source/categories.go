@@ -1,7 +1,7 @@
 package source
 
 import (
-	"config"
+	"common"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -9,7 +9,7 @@ import (
 
 // CategoriesOutputStruct return
 type CategoriesOutputStruct struct {
-	StatusOut   config.Status     `json:"status"`
+	StatusOut   common.Status     `json:"status"`
 	ListDataOut []*CategoriesOutputData `json:"data"`
 }
 
@@ -21,10 +21,10 @@ type CategoriesOutputData struct {
 
 func QuizCategories(w http.ResponseWriter, req *http.Request){
 	
-	config.Cors(&w)
+	common.Cors(&w)
 	w.Header().Set("Content-Type", "application/json")
 
-	mydb := config.Mysqlconnect()
+	mydb := common.Mysqlconnect()
 	defer mydb.Close()
 
 	type input struct {
@@ -35,21 +35,21 @@ func QuizCategories(w http.ResponseWriter, req *http.Request){
 	var CategoryName string
 	var CategoryID int
 
-	var status config.Status
+	var status common.Status
 	var outputStruct CategoriesOutputStruct
 	var result []*CategoriesOutputData
 
 	if(inputJSON.SessionKey == ""){
-		status = config.Status{
+		status = common.Status{
 			Code:    403,
-			Message: config.InvalidInput,
+			Message: common.InvalidInput,
 		}
 	} else {
 		selCategories, errSel := mydb.Query("SELECT * FROM categories")
 
 		if(errSel != nil){
 
-			status = config.Status{
+			status = common.Status{
 				Code:    403,
 				Message: errSel.Error(),
 			}
@@ -71,9 +71,9 @@ func QuizCategories(w http.ResponseWriter, req *http.Request){
 				}
 			}
 
-			status = config.Status{
+			status = common.Status{
 				Code:    200,
-				Message: config.SuccessMsg,
+				Message: common.SuccessMsg,
 			}
 		}
 	}
