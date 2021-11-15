@@ -3,6 +3,8 @@ package source
 import (
 	"common"
 	"encoding/json"
+	"io/ioutil"
+	"log"
 	"net/http"
 	"time"
 )
@@ -24,26 +26,37 @@ func UpdateScore(w http.ResponseWriter, req *http.Request){
 	var inputJSON input
 	var status common.Status
 
-	if(inputJSON.SessionKey == "" || inputJSON.CategoryID == 0){
+	readData, errRead := ioutil.ReadAll(req.Body)
+	if errRead != nil {
+		log.Println(errRead)
+	}
 
-		status = common.Status{
-			Code:    403,
-			Message: common.InvalidInput,
-		}
+	errParse := json.Unmarshal(readData, &inputJSON)
+	if errParse != nil {
+		log.Println(errParse)
 
 	} else {
-		currentTime := time.Now().Format("2006-01-02")
-		_, errUpdLeader := mydb.Exec("UPDATE leaderboards SET score = score + 1 WHERE user_id = ? AND score_date = ?", inputJSON.UserID, currentTime)
+		if(inputJSON.SessionKey == "" || inputJSON.CategoryID == 0){
 
-		if(errUpdLeader != nil){
 			status = common.Status{
 				Code:    403,
 				Message: common.InvalidInput,
 			}
+
 		} else {
-			status = common.Status{
-				Code:    200,
-				Message: common.SuccessMsg,
+			currentTime := time.Now().Format("2006-01-02")
+			_, errUpdLeader := mydb.Exec("UPDATE leaderboards SET score = score + 1 WHERE user_id = ? AND score_date = ?", inputJSON.UserID, currentTime)
+
+			if(errUpdLeader != nil){
+				status = common.Status{
+					Code:    403,
+					Message: common.InvalidInput,
+				}
+			} else {
+				status = common.Status{
+					Code:    200,
+					Message: common.SuccessMsg,
+				}
 			}
 		}
 	}
