@@ -1,22 +1,22 @@
 package source
 
 import (
-	"config"
+	"common"
 	"encoding/json"
 	"net/http"
 )
 
 // LogoutOutputStruct return
 type LogoutOutputStruct struct {
-	StatusOut           config.Status  `json:"status"`
+	StatusOut           common.Status  `json:"status"`
 }
 
 func Logout(w http.ResponseWriter, req *http.Request){
 	
-	config.Cors(&w)
+	common.Cors(&w)
 	w.Header().Set("Content-Type", "application/json")
 
-	mydb := config.Mysqlconnect()
+	mydb := common.Mysqlconnect()
 	defer mydb.Close()
 
 	type input struct {
@@ -25,21 +25,21 @@ func Logout(w http.ResponseWriter, req *http.Request){
 	}
 
 	var inputJSON input
-	var status config.Status
+	var status common.Status
 	var outputStruct LogoutOutputStruct
 	var id int = 0
 
 	if(inputJSON.Email == "" || inputJSON.SessionKey == ""){
 
-		status = config.Status{
+		status = common.Status{
 			Code:    403,
-			Message: config.InvalidInput,
+			Message: common.InvalidInput,
 		}
 	} else {
 		errUser := mydb.QueryRow("SELECT * FROM users WHERE email = ? AND session_key = ?", inputJSON.Email, inputJSON.SessionKey).Scan(&id)
 
 		if(errUser != nil){
-			status = config.Status{
+			status = common.Status{
 				Code:    403,
 				Message: errUser.Error(),
 			}
@@ -51,14 +51,14 @@ func Logout(w http.ResponseWriter, req *http.Request){
 
 				if(errUpd != nil ){
 
-					status = config.Status{
+					status = common.Status{
 						Code:    403,
 						Message: errUpd.Error(),
 					}
 				} else {
-					status = config.Status{
+					status = common.Status{
 						Code:    200,
-						Message: config.SuccessMsg,
+						Message: common.SuccessMsg,
 					}
 				}
 				
