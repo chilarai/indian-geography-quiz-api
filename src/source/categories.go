@@ -57,7 +57,7 @@ func QuizCategories(w http.ResponseWriter, req *http.Request){
 				Message: common.InvalidInput,
 			}
 		} else {
-			selCategories, errSel := mydb.Query("SELECT * FROM categories")
+			selCategories, errSel := mydb.Query("SELECT * FROM quizes")
 
 			if(errSel != nil){
 

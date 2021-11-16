@@ -58,7 +58,7 @@ func QuizSubCategories(w http.ResponseWriter, req *http.Request){
 				Message: common.InvalidInput,
 			}
 		} else {
-			selSubCategories, errSel := mydb.Query("SELECT * FROM quizsubcategories WHERE quiz_id = ?", inputJSON.CategoryID)
+			selSubCategories, errSel := mydb.Query("SELECT id, subcategory_name  FROM quizsubcategories WHERE quiz_id = ?", inputJSON.CategoryID)
 
 			if(errSel != nil){
 
