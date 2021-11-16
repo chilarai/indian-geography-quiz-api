@@ -45,17 +45,35 @@ func UpdateScore(w http.ResponseWriter, req *http.Request){
 
 		} else {
 			currentTime := time.Now().Format("2006-01-02")
-			_, errUpdLeader := mydb.Exec("UPDATE leaderboards SET score = score + 1 WHERE user_id = ? AND score_date = ?", inputJSON.UserID, currentTime)
+			updLeader, errUpdLeader := mydb.Exec("UPDATE leaderboards SET score = score + 1 WHERE user_id = ? AND score_date = ?", inputJSON.UserID, currentTime)
 
 			if(errUpdLeader != nil){
 				status = common.Status{
 					Code:    403,
-					Message: common.InvalidInput,
+					Message: errUpdLeader.Error(),
 				}
 			} else {
-				status = common.Status{
-					Code:    200,
-					Message: common.SuccessMsg,
+				rowsAffected, _ := updLeader.RowsAffected()
+
+				if rowsAffected <= 0{
+					_, errIns := mydb.Exec("INSERT INTO leaderboards (user_id, score, quiz_id, score_date) VALUES (?,?,?,?)", inputJSON.UserID, 1, inputJSON.CategoryID, currentTime)
+
+					if errIns != nil {
+						status = common.Status{
+							Code:    403,
+							Message: errIns.Error(),
+						}
+					} else {
+						status = common.Status{
+							Code:    200,
+							Message: common.SuccessMsg,
+						}
+					}
+				}  else {
+					status = common.Status{
+						Code:    200,
+						Message: common.SuccessMsg,
+					}
 				}
 			}
 		}

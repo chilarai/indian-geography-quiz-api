@@ -48,7 +48,7 @@ func Logout(w http.ResponseWriter, req *http.Request){
 				Message: common.InvalidInput,
 			}
 		} else {
-			errUser := mydb.QueryRow("SELECT * FROM users WHERE email = ? AND session_key = ?", inputJSON.Email, inputJSON.SessionKey).Scan(&id)
+			errUser := mydb.QueryRow("SELECT id FROM users WHERE email = ? AND session_key = ?", inputJSON.Email, inputJSON.SessionKey).Scan(&id)
 
 			if(errUser != nil){
 				status = common.Status{
@@ -57,25 +57,20 @@ func Logout(w http.ResponseWriter, req *http.Request){
 				}
 			} else {
 
-				if(id != 0){
+				_, errUpd := mydb.Exec("UPDATE users SET session_key = ? WHERE email = ?", "", inputJSON.Email)
 
-					_, errUpd := mydb.Exec("UPDATE users SET session_key = ? WHERE email = ?", "", inputJSON.Email)
+				if(errUpd != nil ){
 
-					if(errUpd != nil ){
-
-						status = common.Status{
-							Code:    403,
-							Message: errUpd.Error(),
-						}
-					} else {
-						status = common.Status{
-							Code:    200,
-							Message: common.SuccessMsg,
-						}
+					status = common.Status{
+						Code:    403,
+						Message: errUpd.Error(),
 					}
-					
-
-				}
+				} else {
+					status = common.Status{
+						Code:    200,
+						Message: common.SuccessMsg,
+					}
+				}					
 			}
 		}
 	}

@@ -3,6 +3,7 @@ package source
 import (
 	"common"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -41,7 +42,7 @@ func Login(w http.ResponseWriter, req *http.Request){
 	var status common.Status
 	var outputStatus LoginOutputData
 	var outputStruct LoginOutputStruct
-	var id int = 0
+	var id int64
 
 	readData, errRead := ioutil.ReadAll(req.Body)
 	if errRead != nil {
@@ -61,59 +62,54 @@ func Login(w http.ResponseWriter, req *http.Request){
 				Message: common.InvalidInput,
 			}
 		} else {
-			errUser := mydb.QueryRow("SELECT * FROM users WHERE email = ?", inputJSON.Email).Scan(&id)
+			errUser := mydb.QueryRow("SELECT id FROM users WHERE email = ?", inputJSON.Email).Scan(&id)
 
 			if(errUser != nil){
-				status = common.Status{
-					Code:    403,
-					Message: errUser.Error(),
+				fmt.Println(errUser.Error())
+				insUser, errIns := mydb.Exec("INSERT INTO users (email, session_key, name, photo_link) VALUES (?,?,?,?)", inputJSON.Email, inputJSON.SessionKey, inputJSON.Name, inputJSON.PhotoLink)
+
+				if(errIns != nil){
+					status = common.Status{
+						Code:    403,
+						Message: errIns.Error(),
+					}
+				} else {
+					userId, _ := insUser.LastInsertId()
+
+					outputStatus =  LoginOutputData {
+						UserID: userId,
+						Name: inputJSON.Name,
+						PhotoLink:inputJSON.PhotoLink,
+						SessionToken: inputJSON.SessionKey,
+					}
+
+					status = common.Status{
+						Code:    200,
+						Message: common.SuccessMsg,
+					}
 				}
 			} else {
 
-				if(id == 0){
+				_, errUpd := mydb.Exec("UPDATE users SET session_key = ? WHERE email = ?", inputJSON.SessionKey, inputJSON.Email)
 
-					insUser, errIns := mydb.Exec("INSERT INTO users (email, session_key, name, photo_link) VALUES (?,?,?,?)", inputJSON.Email, inputJSON.SessionKey, inputJSON.Name, inputJSON.PhotoLink)
+				if(errUpd != nil ){
 
-					if(errIns != nil){
-						status = common.Status{
-							Code:    403,
-							Message: errIns.Error(),
-						}
-					} else {
-						userId, _ := insUser.LastInsertId()
-
-						outputStatus =  LoginOutputData {
-							UserID: userId,
-							Name: inputJSON.Name,
-							PhotoLink:inputJSON.PhotoLink,
-							SessionToken: inputJSON.SessionKey,
-						}
-
-						status = common.Status{
-							Code:    200,
-							Message: common.SuccessMsg,
-						}
+					status = common.Status{
+						Code:    403,
+						Message: errUpd.Error(),
 					}
-					
-
 				} else {
-
-					_, errUpd := mydb.Exec("UPDATE users SET session_key = ? WHERE email = ?", inputJSON.SessionKey, inputJSON.Email)
-
-					if(errUpd != nil ){
-
-						status = common.Status{
-							Code:    403,
-							Message: errUpd.Error(),
-						}
-					} else {
-						status = common.Status{
-							Code:    200,
-							Message: common.SuccessMsg,
-						}
+					outputStatus =  LoginOutputData {
+						UserID: id,
+						Name: inputJSON.Name,
+						PhotoLink:inputJSON.PhotoLink,
+						SessionToken: inputJSON.SessionKey,
 					}
-					
 
+					status = common.Status{
+						Code:    200,
+						Message: common.SuccessMsg,
+					}
 				}
 			}
 		}

@@ -7,6 +7,7 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
+	"time"
 )
 
 // EntriesOutputStruct return
@@ -92,21 +93,29 @@ func QuizEntries(w http.ResponseWriter, req *http.Request){
 
 					answerOptions = nil
 
-					if(answersLength >= 4){
-						for len(answerOptions) <= 4 {
-							CreateAnswerOptions(answers, &answerOptions)
+					// Enter random options other than the answer
+					if(answersLength > 3){
+						for len(answerOptions) < 3 {
+							CreateAnswerOptions(answers, &answerOptions, ans)
 						}
-					} else if (answersLength >= 3) {
+					} else if (answersLength > 2) {
 
-						for len(answerOptions) <= 3 {
-							CreateAnswerOptions(answers, &answerOptions)
+						for len(answerOptions) < 2 {
+							CreateAnswerOptions(answers, &answerOptions, ans)
 						}
 					} else {
 
-						for len(answerOptions) <= 2 {
-							CreateAnswerOptions(answers, &answerOptions)
+						for len(answerOptions) < 1 {
+							CreateAnswerOptions(answers, &answerOptions, ans)
 						}
 					}
+
+					// Append the right answer to the options
+					answerOptions = append(answerOptions, ans)
+					
+					// Randomize the answer options
+					rand.Seed(time.Now().UnixNano())
+					rand.Shuffle(len(answerOptions), func(i, j int) { answerOptions[i], answerOptions[j] = answerOptions[j], answerOptions[i] })
 
 					elem := EntriesOutputData{
 						RightOption : ans,
@@ -143,7 +152,7 @@ func QuizEntries(w http.ResponseWriter, req *http.Request){
 	w.Write(output)
 }
 
-
+// check if the value exists in slice
 func Find(slice []string, val string) (int, bool) {
     for i, item := range slice {
         if item == val {
@@ -153,13 +162,16 @@ func Find(slice []string, val string) (int, bool) {
     return -1, false
 }
 
-func CreateAnswerOptions(answers []string, answerOptions *[]string){
+// function to insert random values in answer options
+func CreateAnswerOptions(answers []string, answerOptions *[]string, actualAnswer string){
 	randomIndex := rand.Intn(len(answers))
 	pick := answers[randomIndex]
 
-	_, matches := Find(*answerOptions, pick)
+	if pick != actualAnswer {
+		_, matches := Find(*answerOptions, pick)
 
-	if !matches{
-		*answerOptions = append(*answerOptions, pick)
+		if !matches{
+			*answerOptions = append(*answerOptions, pick)
+		}
 	}
 }
