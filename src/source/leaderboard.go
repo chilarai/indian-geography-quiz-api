@@ -12,7 +12,6 @@ import (
 type LeaderboardsOutputStruct struct {
 	StatusOut   common.Status     `json:"status"`
 	ListDataOut []*LeaderboardsOutputData `json:"data"`
-	ListCurrentUserData CurrentUserOutputData `json:"currentUserData"`
 }
 
 // LeaderboardsOutputData struct
@@ -22,12 +21,6 @@ type LeaderboardsOutputData struct {
 	CategoryID 		int
 	Name            string
 	PhotoLink       string
-}
-
-// CurrentUserOutputData struct
-type CurrentUserOutputData struct {
-	Score 			int
-	CategoryID 		int
 }
 
 func Leaderboard(w http.ResponseWriter, req *http.Request){
@@ -47,12 +40,11 @@ func Leaderboard(w http.ResponseWriter, req *http.Request){
 
 	var inputJSON input
 	var Name, PhotoLink string
-	var UserID, Score, CategoryID, CurrentUserScore, CurrentUserCategoryID int
+	var UserID, Score, CategoryID int
 
 	var status common.Status
 	var outputStruct LeaderboardsOutputStruct
 	var result []*LeaderboardsOutputData
-	var currentUserResult CurrentUserOutputData
 
 	readData, errRead := ioutil.ReadAll(req.Body)
 	if errRead != nil {
@@ -100,17 +92,6 @@ func Leaderboard(w http.ResponseWriter, req *http.Request){
 					}
 				}
 
-				errSelCurrUser := mydb.QueryRow("SELECT leaderboards.score, leaderboards.quiz_id FROM leaderboards WHERE leaderboards.score_date = ? AND leaderboards.user_id =? ", inputJSON.QuizDate, inputJSON.UserID).Scan(&CurrentUserScore, &CurrentUserCategoryID)
-
-				if(errSelCurrUser != nil){
-					log.Println(errSelCurrUser)
-				} else {
-					currentUserResult = CurrentUserOutputData{
-						Score 			:CurrentUserScore,
-						CategoryID 		:CurrentUserCategoryID,
-					}
-				}
-
 				status = common.Status{
 					Code:    200,
 					Message: common.SuccessMsg,
@@ -122,7 +103,6 @@ func Leaderboard(w http.ResponseWriter, req *http.Request){
 	outputStruct = LeaderboardsOutputStruct{
 		StatusOut: status,
 		ListDataOut: result,
-		ListCurrentUserData: currentUserResult,
 	}
 
 	output, _ := json.Marshal(outputStruct)
