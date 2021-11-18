@@ -16,6 +16,7 @@ func main(){
 	http.HandleFunc("/login", source.Login)
 	http.HandleFunc("/logout", source.Logout)
 	http.HandleFunc("/leaderboard", source.Leaderboard)
+	http.HandleFunc("/currentscore", source.Currentscore)
 	http.HandleFunc("/categories", source.QuizCategories)
 	http.HandleFunc("/subcategories", source.QuizSubCategories)
 	http.HandleFunc("/entries", source.QuizEntries)
