@@ -8,12 +8,12 @@ import (
 	"net/http"
 )
 
-// CheckEmailOutputStruct return
-type CheckEmailOutputStruct struct {
+// CheckNameOutputStruct return
+type CheckNameOutputStruct struct {
 	StatusOut           common.Status  `json:"status"`
 }
 
-func CheckEmail(w http.ResponseWriter, req *http.Request){
+func CheckName(w http.ResponseWriter, req *http.Request){
 
 	common.Cors(&w)
 	w.Header().Set("Content-Type", "application/json")
@@ -22,12 +22,12 @@ func CheckEmail(w http.ResponseWriter, req *http.Request){
 	defer mydb.Close()
 
 	type input struct {
-		Email string
+		Name string
 	}
 
 	var inputJSON input
 	var status common.Status
-	var outputStruct CheckEmailOutputStruct
+	var outputStruct CheckNameOutputStruct
 	var id int64
 
 	readData, errRead := ioutil.ReadAll(req.Body)
@@ -41,14 +41,16 @@ func CheckEmail(w http.ResponseWriter, req *http.Request){
 
 	} else {
 
-		if( inputJSON.Email == ""){
+		if( inputJSON.Name == ""){
 
 			status = common.Status{
 				Code:    403,
 				Message: common.InvalidInput,
 			}
 		} else {
-			errUser := mydb.QueryRow("SELECT email FROM users WHERE email = ?", inputJSON.Email).Scan(&id)
+			errUser := mydb.QueryRow("SELECT id FROM users WHERE name = ?", inputJSON.Name).Scan(&id)
+
+			log.Println(errUser, id)
 
 			if(errUser != nil){
 				status = common.Status{
@@ -64,7 +66,7 @@ func CheckEmail(w http.ResponseWriter, req *http.Request){
 		}
 	}
 
-	outputStruct = CheckEmailOutputStruct{
+	outputStruct = CheckNameOutputStruct{
 		StatusOut: status,
 	}
 

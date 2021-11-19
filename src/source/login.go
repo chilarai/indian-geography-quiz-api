@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"time"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -32,8 +33,7 @@ func Login(w http.ResponseWriter, req *http.Request){
 	defer mydb.Close()
 
 	type input struct {
-		Password string
-		Email string
+		Name string
 	}
 
 	var inputJSON input
@@ -41,7 +41,7 @@ func Login(w http.ResponseWriter, req *http.Request){
 	var outputStatus LoginOutputData
 	var outputStruct LoginOutputStruct
 	var id int64
-	var password, sessionKey, name string
+	var sessionKey string
 
 	readData, errRead := ioutil.ReadAll(req.Body)
 	if errRead != nil {
@@ -54,44 +54,44 @@ func Login(w http.ResponseWriter, req *http.Request){
 
 	} else {
 
-		if( inputJSON.Password == "" || inputJSON.Email == ""){
+		if(  inputJSON.Name == ""){
 
 			status = common.Status{
 				Code:    403,
 				Message: common.InvalidInput,
 			}
 		} else {
-			errUser := mydb.QueryRow("SELECT id, password, name, session_key FROM users WHERE email = ?", inputJSON.Email).Scan(&id, &password, &name, &sessionKey)
+			errUser := mydb.QueryRow("SELECT id, session_key FROM users WHERE name = ?", inputJSON.Name).Scan(&id, &sessionKey)
 
 			if(errUser != nil){
-				status = common.Status{
-					Code:    403,
-					Message: errUser.Error(),
+
+				newtime := time.Now().String()
+				sessionHash, _ := bcrypt.GenerateFromPassword([]byte(newtime), 14)
+					
+				insUser, _ := mydb.Exec("INSERT INTO users (session_key, name) VALUES (?,?)", sessionHash, inputJSON.Name)
+
+				userIdNew, _ := insUser.LastInsertId();
+
+				outputStatus =  LoginOutputData {
+					UserID: userIdNew,
+					Name: inputJSON.Name,
+					SessionToken: string(sessionHash),
 				}
+
 			} else {
 
-				passHash, _ := bcrypt.GenerateFromPassword([]byte(inputJSON.Password), 14)
-				if(password == string(passHash)){
-					
-					status = common.Status{
-						Code:    403,
-						Message: common.FailedMsg,
-					}
 
-				} else {
-
-					outputStatus =  LoginOutputData {
-						UserID: id,
-						Name: name,
-						SessionToken: sessionKey,
-					}
-
-					status = common.Status{
-						Code:    200,
-						Message: common.SuccessMsg,
-					}
+				outputStatus =  LoginOutputData {
+					UserID: id,
+					Name: inputJSON.Name,
+					SessionToken: sessionKey,
 				}
 
+			}
+
+			status = common.Status{
+				Code:    200,
+				Message: common.SuccessMsg,
 			}
 		}
 	}

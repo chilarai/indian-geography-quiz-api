@@ -130,10 +130,8 @@ CREATE TABLE `users` (
   `session_key` varchar(255) DEFAULT NULL,
   `name` varchar(255) NOT NULL,
   `joined_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `email` varchar(255) DEFAULT NULL,
-  `password` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=8 DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=9 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -142,7 +140,7 @@ CREATE TABLE `users` (
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (1,'asdasdqq','chilarai','2021-11-15 04:48:44',NULL,NULL),(2,'sdfsdqwerr','meenakshi','2021-11-15 04:48:44',NULL,NULL),(3,'adsasd','Vishal Saharan','2021-11-16 08:58:32',NULL,NULL),(7,'RN6SeP7SLfUHywfKf5gJGJhLgC3DdPaSJGW','x1','2021-11-19 09:16:53','vishal.saharan331@gmail.com','$2a$14$A.f33pirwcguxVaOBRN6SeP.7SLfUHywfKf5gJGJhLgC3DdPaSJGW');
+INSERT INTO `users` VALUES (1,'asdasdqq','chilarai','2021-11-15 04:48:44'),(2,'sdfsdqwerr','meenakshi','2021-11-15 04:48:44'),(3,'adsasd','Vishal Saharan','2021-11-16 08:58:32'),(7,'RN6SeP7SLfUHywfKf5gJGJhLgC3DdPaSJGW','x1','2021-11-19 09:16:53'),(8,'$2a$14$8aU4/EsG0uleSomxhMHwa.mkk7C/DTZUJ5nsjkf39pEm.ReP8ACeG','vishal.saharan33@gmail.com','2021-11-19 11:41:54');
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -155,4 +153,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2021-11-19 16:53:19
+-- Dump completed on 2021-11-19 17:12:47

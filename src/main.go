@@ -14,9 +14,8 @@ func main(){
 	fmt.Println("Quiz server started..")
 
 	http.HandleFunc("/login", source.Login)
-	http.HandleFunc("/register", source.Register)
 	http.HandleFunc("/logout", source.Logout)
-	http.HandleFunc("/checkemail", source.CheckEmail)
+	http.HandleFunc("/checkname", source.CheckName)
 	http.HandleFunc("/leaderboard", source.Leaderboard)
 	http.HandleFunc("/currentscore", source.Currentscore)
 	http.HandleFunc("/categories", source.QuizCategories)
