@@ -3,17 +3,17 @@ package source
 import (
 	"common"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 // LoginOutputData struct
 type LoginOutputData struct {
 	UserID    int64    `json:"userId"`
 	Name    string `json:"name"`
-	PhotoLink    string `json:"photoLink"`
 	SessionToken string `json:"sessionToken"`
 }
 
@@ -32,10 +32,8 @@ func Login(w http.ResponseWriter, req *http.Request){
 	defer mydb.Close()
 
 	type input struct {
+		Password string
 		Email string
-		SessionKey string
-		Name string
-		PhotoLink string
 	}
 
 	var inputJSON input
@@ -43,6 +41,7 @@ func Login(w http.ResponseWriter, req *http.Request){
 	var outputStatus LoginOutputData
 	var outputStruct LoginOutputStruct
 	var id int64
+	var password, sessionKey, name string
 
 	readData, errRead := ioutil.ReadAll(req.Body)
 	if errRead != nil {
@@ -55,55 +54,36 @@ func Login(w http.ResponseWriter, req *http.Request){
 
 	} else {
 
-		if(inputJSON.Email == "" || inputJSON.SessionKey == "" || inputJSON.Name == ""){
+		if( inputJSON.Password == "" || inputJSON.Email == ""){
 
 			status = common.Status{
 				Code:    403,
 				Message: common.InvalidInput,
 			}
 		} else {
-			errUser := mydb.QueryRow("SELECT id FROM users WHERE email = ?", inputJSON.Email).Scan(&id)
+			errUser := mydb.QueryRow("SELECT id, password, name, session_key FROM users WHERE email = ?", inputJSON.Email).Scan(&id, &password, &name, &sessionKey)
 
 			if(errUser != nil){
-				fmt.Println(errUser.Error())
-				insUser, errIns := mydb.Exec("INSERT INTO users (email, session_key, name, photo_link) VALUES (?,?,?,?)", inputJSON.Email, inputJSON.SessionKey, inputJSON.Name, inputJSON.PhotoLink)
-
-				if(errIns != nil){
-					status = common.Status{
-						Code:    403,
-						Message: errIns.Error(),
-					}
-				} else {
-					userId, _ := insUser.LastInsertId()
-
-					outputStatus =  LoginOutputData {
-						UserID: userId,
-						Name: inputJSON.Name,
-						PhotoLink:inputJSON.PhotoLink,
-						SessionToken: inputJSON.SessionKey,
-					}
-
-					status = common.Status{
-						Code:    200,
-						Message: common.SuccessMsg,
-					}
+				status = common.Status{
+					Code:    403,
+					Message: errUser.Error(),
 				}
 			} else {
 
-				_, errUpd := mydb.Exec("UPDATE users SET session_key = ? WHERE email = ?", inputJSON.SessionKey, inputJSON.Email)
-
-				if(errUpd != nil ){
-
+				passHash, _ := bcrypt.GenerateFromPassword([]byte(inputJSON.Password), 14)
+				if(password == string(passHash)){
+					
 					status = common.Status{
 						Code:    403,
-						Message: errUpd.Error(),
+						Message: common.FailedMsg,
 					}
+
 				} else {
+
 					outputStatus =  LoginOutputData {
 						UserID: id,
-						Name: inputJSON.Name,
-						PhotoLink:inputJSON.PhotoLink,
-						SessionToken: inputJSON.SessionKey,
+						Name: name,
+						SessionToken: sessionKey,
 					}
 
 					status = common.Status{
@@ -111,6 +91,7 @@ func Login(w http.ResponseWriter, req *http.Request){
 						Message: common.SuccessMsg,
 					}
 				}
+
 			}
 		}
 	}
