@@ -56,7 +56,7 @@ CREATE TABLE `leaderboards` (
   `quiz_id` int(11) NOT NULL,
   `score_date` date NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=6 DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=8 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -65,7 +65,7 @@ CREATE TABLE `leaderboards` (
 
 LOCK TABLES `leaderboards` WRITE;
 /*!40000 ALTER TABLE `leaderboards` DISABLE KEYS */;
-INSERT INTO `leaderboards` VALUES (1,1,4,1,'2021-11-15'),(2,2,3,1,'2021-11-15'),(3,3,2,1,'2021-11-16'),(4,2,1,1,'2021-11-16'),(5,1,6,1,'2021-11-16');
+INSERT INTO `leaderboards` VALUES (1,1,4,1,'2021-11-15'),(2,2,3,1,'2021-11-15'),(3,3,2,1,'2021-11-16'),(4,2,1,1,'2021-11-16'),(5,1,6,1,'2021-11-16'),(6,1,10,1,'2021-11-17'),(7,1,19,1,'2021-11-18');
 /*!40000 ALTER TABLE `leaderboards` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -127,13 +127,13 @@ DROP TABLE IF EXISTS `users`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `users` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `email` varchar(50) NOT NULL,
   `session_key` varchar(255) DEFAULT NULL,
   `name` varchar(255) NOT NULL,
-  `photo_link` varchar(255) NOT NULL,
   `joined_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `email` varchar(255) DEFAULT NULL,
+  `password` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=7 DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=8 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -142,7 +142,7 @@ CREATE TABLE `users` (
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (1,'chilly5476@gmail.com','asdasdqq','chilarai','sadsad','2021-11-15 04:48:44'),(2,'capricioussharan@gmail.com','sdfsdqwerr','meenakshi','sadsadsadsf','2021-11-15 04:48:44'),(3,'vishal.saharan33@gmail.com','adsasd','Vishal Saharan','vishal photo','2021-11-16 08:58:32');
+INSERT INTO `users` VALUES (1,'asdasdqq','chilarai','2021-11-15 04:48:44',NULL,NULL),(2,'sdfsdqwerr','meenakshi','2021-11-15 04:48:44',NULL,NULL),(3,'adsasd','Vishal Saharan','2021-11-16 08:58:32',NULL,NULL),(7,'RN6SeP7SLfUHywfKf5gJGJhLgC3DdPaSJGW','x1','2021-11-19 09:16:53','vishal.saharan331@gmail.com','$2a$14$A.f33pirwcguxVaOBRN6SeP.7SLfUHywfKf5gJGJhLgC3DdPaSJGW');
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -155,4 +155,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2021-11-16 16:30:40
+-- Dump completed on 2021-11-19 14:50:59
