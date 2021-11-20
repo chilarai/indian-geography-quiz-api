@@ -3,6 +3,7 @@ package source
 import (
 	"common"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -34,6 +35,7 @@ func Login(w http.ResponseWriter, req *http.Request){
 
 	type input struct {
 		Name string
+		Email string
 	}
 
 	var inputJSON input
@@ -61,14 +63,14 @@ func Login(w http.ResponseWriter, req *http.Request){
 				Message: common.InvalidInput,
 			}
 		} else {
-			errUser := mydb.QueryRow("SELECT id, session_key FROM users WHERE name = ?", inputJSON.Name).Scan(&id, &sessionKey)
+			errUser := mydb.QueryRow("SELECT id, session_key FROM users WHERE email = ?", inputJSON.Email).Scan(&id, &sessionKey)
+
+			newtime := time.Now().String()
+			sessionHash, _ := bcrypt.GenerateFromPassword([]byte(newtime), 14)
 
 			if(errUser != nil){
 
-				newtime := time.Now().String()
-				sessionHash, _ := bcrypt.GenerateFromPassword([]byte(newtime), 14)
-					
-				insUser, _ := mydb.Exec("INSERT INTO users (session_key, name) VALUES (?,?)", sessionHash, inputJSON.Name)
+				insUser, _ := mydb.Exec("INSERT INTO users (session_key, name, email) VALUES (?,?,?)", sessionHash, inputJSON.Name, inputJSON.Email)
 
 				userIdNew, _ := insUser.LastInsertId();
 
@@ -80,11 +82,17 @@ func Login(w http.ResponseWriter, req *http.Request){
 
 			} else {
 
+				updUser, errUpd := mydb.Exec("UPDATE users SET name = ?, session_key = ? WHERE email = ?", inputJSON.Name, sessionHash, inputJSON.Email)
 
-				outputStatus =  LoginOutputData {
-					UserID: id,
-					Name: inputJSON.Name,
-					SessionToken: sessionKey,
+				if(errUpd != nil){
+					rowsAffected, _ := updUser.RowsAffected()
+					fmt.Println("Rows affected", rowsAffected)
+				} else {
+					outputStatus =  LoginOutputData {
+						UserID: id,
+						Name: inputJSON.Name,
+						SessionToken: sessionKey,
+					}
 				}
 
 			}
