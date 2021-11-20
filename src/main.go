@@ -23,6 +23,10 @@ func main(){
 	http.HandleFunc("/entries", source.QuizEntries)
 	http.HandleFunc("/updatescore", source.UpdateScore)
 
+	http.Handle("/states/", http.StripPrefix("", http.FileServer(http.Dir("../res"))))
+
+
+
 	err := http.ListenAndServe(common.Appport, nil)
 	if(err != nil){
 		log.Println(err.Error())
