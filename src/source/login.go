@@ -63,7 +63,7 @@ func Login(w http.ResponseWriter, req *http.Request){
 				Message: common.InvalidInput,
 			}
 		} else {
-			errUser := mydb.QueryRow("SELECT id, session_key, name FROM users WHERE email = ?", inputJSON.Email).Scan(&id, &sessionKey)
+			errUser := mydb.QueryRow("SELECT id, session_key FROM users WHERE email = ?", inputJSON.Email).Scan(&id, &sessionKey)
 
 			newtime := time.Now().String()
 			sessionHash, _ := bcrypt.GenerateFromPassword([]byte(newtime), 14)
@@ -82,7 +82,7 @@ func Login(w http.ResponseWriter, req *http.Request){
 
 			} else {
 
-				updUser, errUpd := mydb.Exec("INSERT INTO users SET name = ?, session_key = ? WHERE email = ?", inputJSON.Name, sessionHash, inputJSON.Email)
+				updUser, errUpd := mydb.Exec("UPDATE users SET name = ?, session_key = ? WHERE email = ?", inputJSON.Name, sessionHash, inputJSON.Email)
 
 				if(errUpd != nil){
 					rowsAffected, _ := updUser.RowsAffected()
