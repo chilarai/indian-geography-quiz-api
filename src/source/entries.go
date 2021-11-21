@@ -23,6 +23,7 @@ type EntriesOutputData struct {
 	RightOption      string
 	Options          []string
 	ImageLink		 string
+	Title			 string
 }
 
 func QuizEntries(w http.ResponseWriter, req *http.Request){
@@ -40,13 +41,14 @@ func QuizEntries(w http.ResponseWriter, req *http.Request){
 	}
 
 	var inputJSON input
-	var Entry, ImageLink, Category, SubCategory string
+	var Entry, ImageLink, Category, SubCategory, Title string
 
 	var status common.Status
 	var outputStruct EntriesOutputStruct
 	var result []*EntriesOutputData
 	var answers []string
 	var answersMap =  make(map[string]string)
+	var answersTitleMap =  make(map[string]string)
 	var answerOptions []string
 	
 
@@ -66,7 +68,7 @@ func QuizEntries(w http.ResponseWriter, req *http.Request){
 				Message: common.InvalidInput,
 			}
 		} else {
-			selEntries, errSel := mydb.Query("SELECT entry, image_link FROM entries WHERE quiz_id = ? AND quizsubcategory_id = ?", inputJSON.CategoryID, inputJSON.SubCategoryID)
+			selEntries, errSel := mydb.Query("SELECT title, entry, image_link FROM entries WHERE quiz_id = ? AND quizsubcategory_id = ?", inputJSON.CategoryID, inputJSON.SubCategoryID)
 
 			if(errSel != nil){
 
@@ -77,7 +79,7 @@ func QuizEntries(w http.ResponseWriter, req *http.Request){
 
 			} else{
 				for selEntries.Next(){
-					errSelScan := selEntries.Scan(&Entry, &ImageLink)
+					errSelScan := selEntries.Scan(&Title, &Entry, &ImageLink)
 
 					if errSelScan != nil {
 						log.Println(errSelScan)
@@ -85,10 +87,12 @@ func QuizEntries(w http.ResponseWriter, req *http.Request){
 
 						answers = append(answers, Entry)
 						answersMap[Entry] = ImageLink
+						answersTitleMap[Entry] = Title
 					}
 				}
 
 				answersLength := len(answers)
+
 				for ans, image := range answersMap {
 
 					answerOptions = nil
@@ -121,6 +125,7 @@ func QuizEntries(w http.ResponseWriter, req *http.Request){
 						RightOption : ans,
 						Options : answerOptions,
 						ImageLink : image,
+						Title : answersTitleMap[ans],
 					}
 
 					result = append(result, &elem)
