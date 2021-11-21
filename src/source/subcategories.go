@@ -18,6 +18,7 @@ type SubCategoriesOutputStruct struct {
 type SubCategoriesOutputData struct {
 	SubCategoryID            int
 	SubCategoryName          string
+	QuizCount 				 int
 }
 
 func QuizSubCategories(w http.ResponseWriter, req *http.Request){
@@ -36,6 +37,7 @@ func QuizSubCategories(w http.ResponseWriter, req *http.Request){
 	var inputJSON input
 	var SubCategoryName string
 	var SubCategoryID int
+	var QuizCount int
 
 	var status common.Status
 	var outputStruct SubCategoriesOutputStruct
@@ -58,7 +60,7 @@ func QuizSubCategories(w http.ResponseWriter, req *http.Request){
 				Message: common.InvalidInput,
 			}
 		} else {
-			selSubCategories, errSel := mydb.Query("SELECT id, subcategory_name  FROM quizsubcategories WHERE quiz_id = ?", inputJSON.CategoryID)
+			selSubCategories, errSel := mydb.Query("SELECT id, subcategory_name, quiz_count  FROM quizsubcategories WHERE quiz_id = ?", inputJSON.CategoryID)
 
 			if(errSel != nil){
 
@@ -69,7 +71,7 @@ func QuizSubCategories(w http.ResponseWriter, req *http.Request){
 
 			} else{
 				for selSubCategories.Next(){
-					errSelScan := selSubCategories.Scan(&SubCategoryID, &SubCategoryName)
+					errSelScan := selSubCategories.Scan(&SubCategoryID, &SubCategoryName, &QuizCount)
 
 					if errSelScan != nil {
 						log.Println(errSelScan)
@@ -78,6 +80,7 @@ func QuizSubCategories(w http.ResponseWriter, req *http.Request){
 						elem := SubCategoriesOutputData{
 							SubCategoryID: SubCategoryID,
 							SubCategoryName: SubCategoryName,
+							QuizCount:QuizCount,
 						}
 
 						result = append(result, &elem)
