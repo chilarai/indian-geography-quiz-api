@@ -24,6 +24,7 @@ func main(){
 	http.HandleFunc("/updatescore", source.UpdateScore)
 
 	http.Handle("/states/", http.StripPrefix("", http.FileServer(http.Dir("../res"))))
+	http.Handle("/info/", http.StripPrefix("/info/", http.FileServer(http.Dir("../static"))))
 
 
 
