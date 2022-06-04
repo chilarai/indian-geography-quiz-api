@@ -1,11 +1,11 @@
 package main
 
 import (
-	"common"
 	"fmt"
+	"indian-geography-quiz/common"
+	"indian-geography-quiz/source"
 	"log"
 	"net/http"
-	"source"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -23,8 +23,8 @@ func main(){
 	http.HandleFunc("/entries", source.QuizEntries)
 	http.HandleFunc("/updatescore", source.UpdateScore)
 
-	http.Handle("/states/", http.StripPrefix("", http.FileServer(http.Dir("../res"))))
-	http.Handle("/info/", http.StripPrefix("/info/", http.FileServer(http.Dir("../static"))))
+	http.Handle("/states/", http.StripPrefix("", http.FileServer(http.Dir("res"))))
+	http.Handle("/info/", http.StripPrefix("/info/", http.FileServer(http.Dir("static"))))
 
 
 

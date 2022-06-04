@@ -1,8 +1,8 @@
 package source
 
 import (
-	"common"
 	"encoding/json"
+	"indian-geography-quiz/common"
 	"io/ioutil"
 	"log"
 	"math/rand"
